@@ -185,11 +185,12 @@ handle_info({'DOWN', MRef, process, DownPid, _Reason}, State) ->
         {ok, ClientId} ->
             NewState =
               case mnesia:dirty_read({mqtt_session, ClientId}) of
-                  [] -> State;
+                  [] -> erase_monitor(MRef, State),State;
                   [Sess = #mqtt_session{sess_pid = DownPid}] ->
                       mnesia:dirty_delete_object(Sess),
                       erase_monitor(MRef, State);
                   [_Sess] ->
+                      erase_monitor(MRef, State),
                       State
               end,
             {noreply, NewState, hibernate};
